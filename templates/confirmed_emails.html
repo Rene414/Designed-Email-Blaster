@@ -43,6 +43,8 @@
                 {% if data%}
                 <h2>Email Identifier: {{email_unique_id}}</h2>
                 {% endif %}
+                <h2></h2>
+                <h3>Email Preview:</h3>
                 
                 <div class = "email-grid">
                     {% if data is not none %}
@@ -56,6 +58,14 @@
                   
                     {% endif %}
                 </div>
+
+                <h4 id = 'conf-one'>Confirm one:
+                    {% if check_confirm.confirmation_one %}{{check_confirm.confirmation_one}}{% else %}Not confirmed{% endif %}
+                </h4>
+                <h4 id = 'conf-two'>Confirm two:
+                    {% if check_confirm.confirmation_two %}{{check_confirm.confirmation_two}}{% else %}Not confirmed{% endif %}
+                </h4>
+               
                 
                
             </div>
@@ -124,8 +134,8 @@
             });
         }*/
 
-        function updateButton() {
-    fetch('/get_status/{{email_unique_id}}')
+        function updateButton1() {
+    fetch('/get_status1/{{email_unique_id}}')
         .then(response => response.json())
         .then(data => {
             const btn = document.getElementById('action-button');
@@ -134,17 +144,46 @@
             // 1. Update the disabled state
             btn.disabled = !isDone;
 
-            // 2. Update the text based on the state
-            if (isDone) {
+             if (isDone) {
                 btn.innerText = "Proceed Sending The Email Blast Now"; // Text when enabled
                 btn.style.backgroundColor = "#28a745"; // Optional: change color to show it's active
             } else {
                 btn.innerText = "Waiting for Confirmation..."; // Text when disabled
             }
+            
+        
+
+            // 2. Update the text based on the state
+           
         });
 }
 
-        setInterval(updateButton, 5000); // Check every 5 seconds
+        function updateButton2() {
+    fetch('/get_status2/{{email_unique_id}}')
+        .then(response => response.json())
+        .then(data => {
+            const confOne = document.getElementById('conf-one');
+            const confTwo = document.getElementById('conf-two');
+
+            if(data.confirmation_one) {
+                confOne.innerText = `Confirm one: ${data.confirmation_one}`;
+            } else {
+                confOne.innerText = "Confirm one: Not confirmed";
+            }
+
+            if(data.confirmation_two) {
+                confTwo.innerText = `Confirm two: ${data.confirmation_two}`;
+            } else {
+                confTwo.innerText = "Confirm two: Not confirmed";
+            }
+
+            // 2. Update the text based on the state
+           
+        });
+}
+
+        setInterval(updateButton1, 5000);
+        setInterval(updateButton2, 5000); // Check every 5 seconds
 
         var socket = io()
         socket.on('button_enabled', function (data) {

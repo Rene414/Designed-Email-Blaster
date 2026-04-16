@@ -434,13 +434,29 @@ def create_email():
     
     return render_template('create_email.html')
 
-@app.route('/get_status/<email_unique_id>')
-def get_status(email_unique_id):
+@app.route('/get_status1/<email_unique_id>')
+def get_status1(email_unique_id):
     log_entry = Logs.query.filter_by(email_unique_id=email_unique_id).first()
+    
+
     if log_entry.confirmation_one and log_entry.confirmation_two:
         return {'status': 'confirms_done'}
     else:
         return {'status': 'confirms not done'}
+    
+@app.route('/get_status2/<email_unique_id>')
+def get_status2(email_unique_id):
+    log_entry = Logs.query.filter_by(email_unique_id=email_unique_id).first()
+    
+    if log_entry.confirmation_one and not log_entry.confirmation_two:
+        return {'confirmation_one': log_entry.confirmation_one }
+    elif log_entry.confirmation_one and log_entry.confirmation_two:
+        return ({'confirmation_one': log_entry.confirmation_one, 'confirmation_two': log_entry.confirmation_two })
+    
+
+    
+    
+   
 
 
 @app.route('/saved_emails/<email_unique_id>', methods=['GET','POST'])
@@ -495,9 +511,11 @@ def confirmed_emails(email_unique_id):
     email_data = EmailContent.query.filter_by(email_unique_id=email_unique_id).first()
     subject = email_data.email_subject
     content = email_data.email_content
+    date = email_data.date_saved
     data = {
                 'emailContent': content, 
-                'subject': subject}
+                'subject': subject,
+                'date_saved': date}
     check_confirms= Logs.query.filter_by(email_unique_id=email_unique_id).first()
    
     confirms = True if check_confirms.confirmation_two else False
@@ -512,7 +530,7 @@ def confirmed_emails(email_unique_id):
             
 
             return render_template('submit_email.html', email_unique_id = email_unique_id, data = data)
-    return render_template('confirmed_emails.html', email_unique_id = email_unique_id, data=data, confirms=confirms)
+    return render_template('confirmed_emails.html', email_unique_id = email_unique_id, data=data, confirms=confirms, check_confirm = check_confirms)
 
 
 
