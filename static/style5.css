@@ -1,3 +1,4 @@
+/* --- Base Styles --- */
 body {
     font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
@@ -31,44 +32,65 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 2rem;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    height: 100%;
+}
+
+/* --- Typography --- */
+.page-title {
+    font-weight: 700;
+    font-size: 2.5rem;
+    color: #fff;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+/* --- Table Styles --- */
+.table {
+    background-color: transparent;
+    color: #e0e0e0;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.table thead th {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.table tbody tr {
+    transition: background-color 0.3s ease;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.table td, .table th {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* --- Form Styles --- */
 .form-label {
     font-weight: 600;
-    margin-bottom: 0.5rem;
     color: #e0e0e0;
 }
 
-.form-control {
+.form-control, .form-select {
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: #fff;
     border-radius: 8px;
 }
 
-.form-control:focus {
+.form-control:focus, .form-select:focus {
     background: rgba(0, 0, 0, 0.3);
     border-color: #e94560;
     box-shadow: 0 0 0 0.25rem rgba(233, 69, 96, 0.25);
     color: #fff;
 }
 
-/* --- Summernote Editor --- */
-.note-editor.note-frame {
-    border-radius: 8px;
-    border-color: rgba(255, 255, 255, 0.2);
-}
-
-.note-toolbar {
-    background-color: rgba(0, 0, 0, 0.2);
-    border-bottom-color: rgba(255, 255, 255, 0.2);
-}
-
-.note-editable {
-    background-color: rgba(0, 0, 0, 0.2);
-    color: #000000;
+.form-check-input:checked {
+    background-color: #e94560;
+    border-color: #e94560;
 }
 
 /* --- Buttons --- */
@@ -76,7 +98,7 @@ body {
     background: #e94560;
     color: #fff;
     border: none;
-    padding: 0.75rem 1.5rem;
+    padding: 0.5rem 1.5rem;
     border-radius: 8px;
     font-weight: 600;
     transition: all 0.3s ease;
@@ -86,19 +108,4 @@ body {
     background: #d43d51;
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(233, 69, 96, 0.2);
-}
-
-.btn-custom-secondary {
-    background: #4a4a5e;
-    color: #fff;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.btn-custom-secondary:hover {
-    background: #5a5a6e;
-    transform: translateY(-2px);
 }
