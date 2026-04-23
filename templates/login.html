@@ -25,8 +25,11 @@
                     <input type = "password" name = "password" placeholder = "Password">
                     </div>
                     <div class = "mb-3">
-                    <button type = "submit" value = "Login">Login</button>
+                    <button type="submit" value="Login">Login</button>
                         </div>
+                        {% if error %}
+                    <div class="alert alert-danger" role="alert">{{ error }}</div>
+            {% endif %}
                 </form>
             </div>
         

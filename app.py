@@ -1,12 +1,12 @@
-from flask import Flask, render_template, request, flash, abort, send_file, redirect, url_for, session
+from flask import Flask, render_template, request, flash, redirect, url_for, session
 import pandas as pd
 from io import StringIO
 import csv
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from functools import wraps
 
+import os
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.application import MIMEApplication
@@ -14,7 +14,7 @@ from email.mime.multipart import MIMEMultipart
 import smtplib
 from datetime import datetime, timezone, timedelta
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, current_user, fresh_login_required, login_required, UserMixin, login_user, logout_user
+from flask_login import LoginManager, current_user, login_required, UserMixin, login_user, logout_user
 from flask_socketio import SocketIO
 
 import secrets
@@ -24,21 +24,27 @@ import base64
 import uuid
 
 
+
+basedir = os.path.abspath(os.path.dirname(__file__))
 app=Flask(__name__)
 
 app.secret_key = 'qL5=shBVtq*V+J#H*F]wew.5CFGG!oZj' 
 socketio = SocketIO(app)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+
+def get_db_uri(filename):
+    return 'sqlite:///' + os.path.join(basedir, filename)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = get_db_uri('users.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_BINDS'] = {
-    'count': 'sqlite:///logs.db', # Secondary DB
-    'token_links': 'sqlite:///confirm_links.db', #Third DB
-    'documentation' : 'sqlite:///email_blast_documentation.db',
-    'saved_emails': 'sqlite:///saved_emails.db',
-    'email_contents': 'sqlite:///email_contents.db'
+    'count': get_db_uri('logs.db'), # Secondary DB
+    'token_links': get_db_uri('confirm_links.db'), #Third DB
+    'documentation' : get_db_uri('email_blast_documentation.db'),
+    'saved_emails': get_db_uri('saved_emails.db'),
+    'email_contents': get_db_uri('email_contents.db')
 }
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=31)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
 login_manager=LoginManager()
 login_manager.init_app(app)
@@ -280,7 +286,8 @@ def login_page():
             print('Logged in')
             next_page = request.args.get('next')
             return redirect(next_page or url_for('frontend'))
-        flash('Invalid Credentials')
+        else:
+            return render_template('login.html', error = "Invalid username or password")
     return render_template('login.html')
 
 '''def admin_required(f):
@@ -430,7 +437,7 @@ def create_email():
             db.session.commit()
             assign_admin_to_email(email_unique_id, subject)
             confirm_email(email_unique_id, email, subject, html)
-            return render_template('confirmed_emails.html', email_unique_id = email_unique_id, data = data)
+            return render_template('confirmed_emails.html', email_unique_id = email_unique_id, data = data, check_confirm = None)
     
     return render_template('create_email.html')
 
@@ -452,7 +459,8 @@ def get_status2(email_unique_id):
         return {'confirmation_one': log_entry.confirmation_one }
     elif log_entry.confirmation_one and log_entry.confirmation_two:
         return ({'confirmation_one': log_entry.confirmation_one, 'confirmation_two': log_entry.confirmation_two })
-    
+    else:
+        return {'confirmation_one': None, 'confirmation_two': None}
 
     
     
@@ -478,6 +486,8 @@ def saved_emails(email_unique_id):
             saved_email.email_content = email
             saved_email.email_subject = subject
             saved_email.date_saved = datetime.now(ZoneInfo("America/Los_Angeles")).strftime('%m/%d/%y %I:%M %p')
+            update_log = Logs.query.filter_by(email_unique_id=email_unique_id).first()
+            update_log.email_subject = subject
             db.session.commit()
             data2={
                 'emailContent': find_saved_email.email_content, 
@@ -503,7 +513,7 @@ def saved_emails(email_unique_id):
             new_email_entry = EmailContent(email_unique_id=email_unique_id, creator = current_user.email_address, email_subject = subject, email_content = email, date_saved = datetime.now(ZoneInfo("America/Los_Angeles")).strftime('%m/%d/%y %I:%M %p'))
             db.session.add(new_email_entry)
             db.session.commit()
-            return render_template('confirmed_emails.html', email_unique_id = email_unique_id, data = data3)
+            return render_template('confirmed_emails.html', email_unique_id = email_unique_id, data = data3, check_confirm = None)
     return render_template('saved_emails.html', email_unique_id = email_unique_id, data=data)
 
 @app.route('/confirmed_emails/<email_unique_id>', methods=['GET','POST'])
@@ -516,9 +526,9 @@ def confirmed_emails(email_unique_id):
                 'emailContent': content, 
                 'subject': subject,
                 'date_saved': date}
-    check_confirms= Logs.query.filter_by(email_unique_id=email_unique_id).first()
+    check_confirm= Logs.query.filter_by(email_unique_id=email_unique_id).first()
    
-    confirms = True if check_confirms.confirmation_two else False
+    confirms = True if check_confirm.confirmation_two else False
 
     if request.method == 'POST':
         btn_clicked = request.form.get('action_type')
@@ -530,7 +540,8 @@ def confirmed_emails(email_unique_id):
             
 
             return render_template('submit_email.html', email_unique_id = email_unique_id, data = data)
-    return render_template('confirmed_emails.html', email_unique_id = email_unique_id, data=data, confirms=confirms, check_confirm = check_confirms)
+   
+    return render_template('confirmed_emails.html', email_unique_id = email_unique_id, data=data, confirms=confirms, check_confirm = check_confirm)
 
 
 
@@ -692,5 +703,5 @@ def download_csv():
 
 if __name__ == '__main__':
     initialize_database()
-    socketio.run(app, debug=True)
-    #app.run(port=5000)
+    #socketio.run(app, debug=True)
+    app.run(host='0.0.0.0',port=5000, debug=True)
