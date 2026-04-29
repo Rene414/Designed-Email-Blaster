@@ -14,34 +14,45 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container-fluid justify-content-center">
+
+
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
             <a class="navbar-brand" href="/">Email Blaster</a>
-        </div>
-        <ul class="navbar-nav">
-            <li class="nav-item">
+            <div class="d-flex">
                 <a class="btn btn-dark" style='width: 115px;' href="{{url_for('frontend')}}">Home Page</a>
-            </li>
-            <li class="nav-item">
                 {% if current_user.is_authenticated %}
                 <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
                 {% endif %}
-            </li>
-        </ul>
+            </div>
+        </div>
     </nav>
 
 
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="alert alert-info">
+            <ul>
+                {% for message in messages %}
+                <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        {% endwith %}
+        <h1 class="custom-margin-top3">User Management</h1>
 
-    <h1 class="custom-margin-top3">Users</h1>
-    <div class="row">
-        <div class='col-5'>
-            <div class="container" id="custom-margin-top4">
-                <table class="table table-bordered table-dark table-striped">
-                    <thread>
-                        <th scope="col">ID</th>
-                        <th scope="col">Username</th>
-                        <th scope="col">Admin Permissions?</th>
-                    </thread>
+        <div class='main-content'>
+            <div class="card">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Username</th>
+                            <th scope="col">Admin Permissions?</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         {% for user in users_table %}
                         <tr>
@@ -52,47 +63,122 @@
                         {% endfor %}
                     </tbody>
                 </table>
-                <form action="{{url_for('admin_page')}}" class = "custom-margin-top2"id = "form2" method="POST" enctype="multipart/form-data">
+                <form action="{{url_for('admin_page')}}" class="custom-margin-top2" id="form2" method="POST">
                     <div class="mb-2">
                         <label for="form_type" class="form-label">Adding or Deleting Users?</label>
-                        <select class="form-control" name = "user_form_type" id="form_type">
-                            <option selected>Options</option>
+                        <select class="form-control" name="user_form_type" id="form_type" required>
+                            <option disabled selected value="">Choose an option</option>
                             <option value="add_user">Add User</option>
                             <option value="delete_user">Delete User</option>
                         </select>
                     </div>
                     <div id="add_form" class="d-none mb-3">
-                        <label for="username">Username: </label>
-                        <input type="text" class="form-control" name="username" id="username" placeholder="Username">
-                        <label for="password">Password</label>
-                        <input type="password" class="form-control" name = "password" id="password" placeholder="Password">
-                        <input class = "form-check-input" name = "admin" type = "checkbox" id = "admin_privilege">
-                        <label class = "form-check-label" for ="admin_privilege">Admin?</label>
+                        <div class="mb-3">
+                            <label for="username">Username: </label>
+                            <input type="text" class="form-control" name="username" id="username"
+                                placeholder="Username">
+                        </div>
+                        <div class="mb-3">
+                            <label for="email">Email: </label>
+                            <input type="email" class="form-control" name="email" id="email"
+                                placeholder="Email">
+                        </div>
+                        <div class="mb-3">
+                            <label for="password">Password</label>
+                            <input type="password" class="form-control" name="password" id="password"
+                                placeholder="Password">
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" name="admin" type="checkbox" id="admin_privilege">
+                            <label class="form-check-label" for="admin_privilege">Grant Admin Privileges?</label>
+                        </div>
                     </div>
 
                     <div id="delete_form" class="d-none mb-2">
                         <label for="id">Username: </label>
-                        <select class="form-control" name = "user_id" id="user_id">
+                        <select class="form-control" name="user_id" id="user_id">
                             {% for user in users_table %}
-                            <option value="{{user.id}}">{{user.id}}</option>
+                            <option value="{{user.id}}">{{user.username}} (ID: {{user.id}})</option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div class = "mb-4">
-                        <button type="submit" name="action_type" value="confirm" class="btn btn-primary">Submit</button>
+                    <div class="mb-4">
+                        <button type="submit" name="action_type" class="btn btn-primary">Submit</button>
                     </div>
                 </form>
+            </div>
 
 
+            <div class="card">
+                
+                <form action="{{url_for('admin_page')}}" class="custom-margin-top2" id="form2" method="POST">
+                    <div class="mb-2">
+                        <label for="email_to_delete" class="form-label">Which Type of Email Would You Like to Delete?</label>
+                        <select class="form-control" name="delete_email" id="email_to_delete" required>
+                            <option disabled selected value="">Choose an option</option>
+                            <option value="saved_email">Saved</option>
+                            <option value="confirming_email">Currently Being Confirmed</option>
+                            <option value="ready_email">Ready for Sending</option>
+                        </select>
+                    </div>
+                    <div id="saved_email_form" class="d-none mb-3">
+                        <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">Subject</th>
+                            <th scope="col">Email Unique ID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs_table %}
+                            {% if log.status == "Saved"%}
+                        <tr>
+                            <th scope="row">{{log.email_subject}}</th>
+                            <td>{{log.email_unique_id}}</td>
+                        </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+                        <div class="mb-3">
+                            <label for="delete_saved_email" class="form-label">Which Saved Email Would You Like to Delete?</label>
+                        <select class="form-control" name="delete_email" id="delete_saved_email" required>
+                            <option disabled selected value="">Choose an option</option>
+                            {% for log in logs_table %}
+                            {% if log.status == "Saved"%}
+                            <option value="{{log.email_unique_id}}">{{log.email_subject}} (ID: {{log.email_unique_id}})</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                        </div>
+                        
+                    
+                    </div>
+
+                    <div id="confirming_email_form" class="d-none mb-2">
+                        <label for="id">Username: </label>
+                        <select class="form-control" name="user_id" id="user_id">
+                            {% for user in users_table %}
+                            <option value="{{user.id}}">{{user.username}} (ID: {{user.id}})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div id="ready_email_form" class="d-none mb-2">
+                        <label for="id">Username: </label>
+                        <select class="form-control" name="user_id" id="user_id">
+                            {% for user in users_table %}
+                            <option value="{{user.id}}">{{user.username}} (ID: {{user.id}})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <button type="submit" name="action_type" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
             </div>
         </div>
-        <div class='col-9'>
-            <div class="container-xxl">
-                <div class="row justify-content-center">
 
-                </div>
-            </div>
-        </div>
 
     </div>
 
@@ -106,20 +192,44 @@
 
     <script>
         const dropdown = document.getElementById('form_type')
+        const dropdown2 = document.getElementById('email_to_delete')
         const add_form = document.getElementById('add_form')
         const delete_form = document.getElementById('delete_form')
+        const saved_email_form = document.getElementById('saved_email_form')
+        const confirming_email_form = document.getElementById('confirming_email_form')
+        const ready_email_form = document.getElementById('ready_email_form')
 
-        dropdown.addEventListener('change', function(){
+        dropdown.addEventListener('change', function () {
             add_form.classList.add('d-none');
             delete_form.classList.add('d-none');
 
-            if (this.value === 'add_user'){
+            if (this.value === 'add_user') {
                 add_form.classList.remove('d-none');
-            }else if (this.value === 'delete_user'){
+            } else if (this.value === 'delete_user') {
                 delete_form.classList.remove('d-none');
             }
+
+
         });
 
+
+        dropdown2.addEventListener('change', function () {
+            saved_email_form.classList.add('d-none');
+            confirming_email_form.classList.add('d-none');
+            ready_email_form.classList.add('d-none');
+
+            if(this.value == 'saved_email'){
+                saved_email_form.classList.remove('d-none');
+               
+            } else if (this.value == 'confirming_email'){
+                confirming_email_form.classList.remove('d-none');
+             
+            } else if (this.value == 'ready_email'){
+                ready_email_form.classList.remove('d-none');
+               
+            }
+
+        });
 
     </script>
 

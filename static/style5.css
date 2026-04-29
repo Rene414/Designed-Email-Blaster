@@ -1,111 +1,121 @@
-/* --- Base Styles --- */
 body {
-    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
-    color: #e0e0e0;
-    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f0f4f8; /* Light blue-gray background */
+    color: #333;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-/* --- Navbar --- */
 .navbar {
-    background-color: rgba(22, 33, 62, 0.8);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid #dee2e6;
 }
 
 .navbar-brand {
-    font-weight: 700;
-    color: #e94560 !important; /* Vibrant accent color */
+    font-weight: bold;
+    color: #0056b3 !important; /* Darker blue for brand */
 }
 
-/* --- Main Content --- */
-.main-content {
-    padding-top: 4rem;
-    padding-bottom: 4rem;
+.container, .container-fluid, .container-xxl {
+    width: 100%;
+    max-width: 1200px; /* Max width for large screens */
+    padding: 20px;
 }
 
-/* --- Glassmorphism Card --- */
-.glass-card {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(15px);
-    border-radius: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 2rem;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-}
-
-/* --- Typography --- */
-.page-title {
-    font-weight: 700;
-    font-size: 2.5rem;
-    color: #fff;
-    margin-bottom: 2rem;
+h1.custom-margin-top3 {
+    color: #004085; /* A deep blue for headings */
     text-align: center;
+    margin-top: 2rem;
+    margin-bottom: 1.5rem;
 }
 
-/* --- Table Styles --- */
+.main-content {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    gap: 2rem;
+    padding: 0 20px;
+}
+
+.card {
+    background-color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    padding: 2rem;
+    width: 100%;
+}
+
 .table {
-    background-color: transparent;
-    color: #e0e0e0;
-    border-color: rgba(255, 255, 255, 0.2);
+    margin-top: 1rem;
+    border-radius: 8px;
+    overflow: hidden; /* Ensures border-radius is applied to table corners */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.table thead th {
-    color: #fff;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+.table thead {
+    background-color: #0056b3; /* Professional blue for table header */
+    color: #ffffff;
 }
 
-.table tbody tr {
-    transition: background-color 0.3s ease;
+.table th, .table td {
+    vertical-align: middle;
+    padding: 1rem;
 }
 
-.table tbody tr:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #e9f2fa; /* Lighter blue for striped rows */
 }
 
-.table td, .table th {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* --- Form Styles --- */
 .form-label {
     font-weight: 600;
-    color: #e0e0e0;
+    color: #343a40;
 }
 
 .form-control, .form-select {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
-    border-radius: 8px;
+    border-radius: 5px;
+    border: 1px solid #ced4da;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
 }
 
 .form-control:focus, .form-select:focus {
-    background: rgba(0, 0, 0, 0.3);
-    border-color: #e94560;
-    box-shadow: 0 0 0 0.25rem rgba(233, 69, 96, 0.25);
-    color: #fff;
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
 }
 
-.form-check-input:checked {
-    background-color: #e94560;
-    border-color: #e94560;
-}
-
-/* --- Buttons --- */
-.btn-custom-primary {
-    background: #e94560;
-    color: #fff;
-    border: none;
-    padding: 0.5rem 1.5rem;
-    border-radius: 8px;
+.btn-primary {
+    background-color: #0069d9;
+    border-color: #0062cc;
     font-weight: 600;
-    transition: all 0.3s ease;
+    padding: 0.5rem 1.5rem;
+    border-radius: 5px;
 }
 
-.btn-custom-primary:hover {
-    background: #d43d51;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(233, 69, 96, 0.2);
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+}
+
+.btn-dark {
+    background-color: #343a40;
+    border-color: #343a40;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+#form2 {
+    margin-top: 2rem;
+}
+
+.form-check-label {
+    margin-left: 0.5rem;
 }

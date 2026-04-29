@@ -62,19 +62,19 @@
                             <div id="customs" class="d-none mb-2">
                                 <label for="csvFile" class="form-label">Custom CSV</label>
                                 <input type="file" name="file" class="form-control" id="csvFile" accept=".csv"
-                                     placeholder="Enter csv File">
+                                     placeholder="Enter csv File" required>
                             </div>
                             
 
                             <div class="form-group">
                                 <label for="subject">Subject: </label>
                                 <input type="text" class="form-control" name="subject" id="subject"
-                                    placeholder="Subject" value="{{data.get('subject', '')}}">
+                                    placeholder="Subject" value="{{data.get('subject', '')}}" required>
                             </div>
 
                             <div class="form-group">
                                 <label for="emailContent">Email Content: </label>
-                                <textarea class="form-control" name="emailContent"
+                                <textarea class="form-control" name="emailContent" required>
                                     id="emailContent">{{data.get('emailContent', '')}}</textarea>
                             </div>
                             <!--

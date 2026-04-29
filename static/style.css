@@ -1,106 +1,117 @@
 body {
-    background: linear-gradient(to right, #232526, #414345);
-    color: #e0e0e0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f0f4f8; /* Light blue-gray background */
+    color: #333;
+    margin: 0;
+    padding: 0;
 }
 
-.display-4 {
-    color: #ffffff;
+.navbar {
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid #dee2e6;
+    padding: 0.5rem 1rem;
 }
 
-.lead {
-    color: #c0c0c0;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.footer {
-    background-color: #212529 !important;
-}
-
-/* Animation for the heading */
-.animated-heading {
-    animation: fadeInDown 1s ease-in-out;
-}
-
-@keyframes fadeInDown {
-    0% {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* 3D Text Effect */
-.text-3d {
-    text-shadow: 
-        0 1px 0 #ccc, 
-        0 2px 0 #c9c9c9, 
-        0 3px 0 #bbb, 
-        0 4px 0 #b9b9b9, 
-        0 5px 0 #aaa, 
-        0 6px 1px rgba(0,0,0,.1), 
-        0 0 5px rgba(0,0,0,.1), 
-        0 1px 3px rgba(0,0,0,.3), 
-        0 3px 5px rgba(0,0,0,.2), 
-        0 5px 10px rgba(0,0,0,.25), 
-        0 10px 10px rgba(0,0,0,.2), 
-        0 20px 20px rgba(0,0,0,.15);
-    color: #fff;
+.navbar-brand {
     font-weight: bold;
-}
-#form{
-    background-color: rgb(255, 255, 255);
-}
-#form2{
-    background-color: rgb(255, 255, 255);
-    margin-left: 0px;
-    border-style:solid;
-    border-width: 10px;
-    border-color: white;
-    border-radius: 9px; 
+    color: #0056b3 !important;
 }
 
-.custom-margin-top2{
-    margin-left: 0px;
-    border-style:solid;
-    border-width: 10px;
-    border-color: white;
-    border-radius: 9px; 
+.main-container {
+    padding: 2rem;
 }
 
-.custom-margin-top{
-    margin-top: 10px;
-    border-style:solid;
-    border-width: 20px;
-    border-color: white;
-    border-radius: 9px; 
-}
-#custom-margin-top2{
-    margin-left: 100px;
-    margin-top: 90px
+.column-header {
+    color: #004085;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #0056b3;
 }
 
-.custom-margin-top3{
-    margin-top: 80px;
-    margin-left: 50px;
+.email-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    max-height: 75vh;
+    overflow-y: auto;
+    padding: 1rem;
+    background-color: #e9ecef;
+    border-radius: 8px;
 }
 
-#custom-margin-top4{
-    margin-left: 50px;
+.card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
-.custom-margin-top-create-email{
-    margin-top: 90px;
-    border-style:solid;
-    border-width: 20px;
-    border-color: white;
-    border-radius: 9px; 
-    
+.card-link:hover .card {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
-#header{
-    background-color: white;
+.card {
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
+.card-body {
+    padding: 1.25rem;
+}
+
+.card-title {
+    font-weight: bold;
+    color: #0056b3;
+    margin-bottom: 0.5rem;
+}
+
+.card-subtitle {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.card-text {
+    font-size: 0.95rem;
+    margin-top: 1rem;
+    max-height: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Limit to 3 lines */
+    -webkit-box-orient: vertical;
+}
+
+.create-email-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 200px;
+    background-color: #e9f2fa;
+    border: 2px dashed #0069d9;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.create-email-card:hover {
+    background-color: #cfe2ff;
+}
+
+.create-email-link {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #0056b3;
+    text-decoration: none;
+}
+
+.create-email-link .plus-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}

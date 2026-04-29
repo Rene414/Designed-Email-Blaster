@@ -49,13 +49,13 @@
                             <div class="form-group">
                                 <label for="subject">Subject: </label>
                                 <input type="text" class="form-control" name="subject" id="subject"
-                                    placeholder="Subject" value="{{data.get('subject', '')}}">
+                                    placeholder="Subject" value="{{data.get('subject', '')}}" required>
                             </div>
 
                             <div class="form-group">
                                 <label for="emailContent">Email Content: </label>
                                 <textarea class="form-control" name="emailContent"
-                                    id="emailContent">{{data.get('emailContent', '')}}</textarea>
+                                    id="emailContent" required>{{data.get('emailContent', '')}}</textarea>
                             </div>
                             <!--
                     <div class="form-check">

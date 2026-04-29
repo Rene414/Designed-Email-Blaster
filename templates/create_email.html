@@ -14,47 +14,43 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container-fluid justify-content-center">
+
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
             <a class="navbar-brand" href="/">Email Blaster</a>
-        </div>
-        <ul class="navbar-nav">
-            <li class="nav-item">
+            <div class="d-flex">
                 <a class="btn btn-dark" style='width: 115px;' href="{{url_for('frontend')}}">Home Page</a>
-            </li>
-            <li class="nav-item">
-                <a class="btn btn-dark" style='width: 115px;' href="{{url_for('admin_page')}}">Admin Page</a>
-            </li>
-            <li class="nav-item">
+                <a class="btn btn-dark me-2" href="{{url_for('admin_page')}}">Admin Page</a>
                 {% if current_user.is_authenticated %}
                 <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
                 {% endif %}
-            </li>
-        </ul>
+            </div>
+        </div>
     </nav>
 
 
-    
 
-            <main class="main-content">
+
+    <main class="main-content">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-lg-10">
                     <div class="glass-card">
                         <h1 class="mb-4">Create New Email Campaign</h1>
-                        <form id = "create-email-form" onsubmit = "disableButtons()" action="{{url_for('create_email')}}" method="POST" enctype="multipart/form-data">
-                            
+                        <form id="create-email-form" onsubmit="disableButtons()" action="{{url_for('create_email')}}"
+                            method="POST" enctype="multipart/form-data">
+
 
                             <div class="mb-3">
                                 <label for="subject">Subject: </label>
                                 <input type="text" class="form-control" name="subject" id="subject"
-                                    placeholder="Subject" >
+                                    placeholder="Subject" required>
                             </div>
 
-                            <div class="mb-3">
+                            <div class="mb-4">
                                 <label for="emailContent">Email Content: </label>
-                                <textarea class="form-control" name="emailContent"
-                                    id="emailContent"></textarea>
+                                <textarea class="form-control" name="emailContent" id="emailContent"
+                                    required></textarea>
                             </div>
                             <!--
                     <div class="form-check">
@@ -62,12 +58,12 @@
                         <label class="form-check-label" for="HtmlButton"> HTML Format</label>
                     </div>-->
 
-                    <div class="d-flex justify-content-end">
-                            <button type="submit" onclick = "disableButtons()" name="action_type" value="save" id = "save"
-                                class="btn btn-primary">Save</button>
-                                
-                            <button type="submit" onclick = "disableButtons()" name="action_type" value="confirm" id = "confirm"
-                                class="btn btn-primary">Confirm</button>
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" onclick="disableButtons()" name="action_type" value="save"
+                                    id="save" class="btn btn-primary">Save</button>
+
+                                <button type="submit" onclick="disableButtons()" name="action_type" value="confirm"
+                                    id="confirm" class="btn btn-primary">Confirm</button>
                             </div>
                         </form>
                     </div>
@@ -75,6 +71,8 @@
             </div>
         </div>
     </main>
+
+
 
 
 
@@ -99,15 +97,15 @@
                     ['view', ['fullscreen', 'codeview', 'help']]
                 ]
             });
-            });
-        
+        });
+
         const form = document.getElementById('create-email-form');
         const saveButton = document.getElementById('save');
         const confirmButton = document.getElementById('confirm');
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-    // Logic for your API call here
+            // Logic for your API call here
             console.log("Form submitted exactly once.");
         }, { once: true });
 
@@ -120,50 +118,51 @@
         socket.on('confirmation_channel', function (data) {
             document.getElementById('confirmation_counter').innerText = data.amount;
         });
-   
+
+      
         /*
         const subjectInput =document.getElementById('subject');
         const emailContentInput = document.getElementById('emailContent')
         */
 
-       /* $('#save').on('click', function(){
-            const emailContentWithStyling = $('#emailContent').summernote('code');
-            localStorage.setItem('savedEmailContent', emailContentWithStyling)
-            showStatus('sucessfully saved', 'alert-danger')
-        });
-
-        $('#load').on('click', function(){
-            const savedData = localStorage.getItem('doc_' + savedEmailContent);
-            if (savedData){
-                $('emailContent').summernote('code', savedData);
-                showStatus('Loaded succesfully', 'alert-danger')
-            }else{
-                showStatus('error', 'alert-danger')
-            }
-        });
-
-        function showStatus(msg, type){
-            $('#statusMessage').html(`<div class="alert ${type}">${msg}</div>`);
-        }*/
-
-     
+        /* $('#save').on('click', function(){
+             const emailContentWithStyling = $('#emailContent').summernote('code');
+             localStorage.setItem('savedEmailContent', emailContentWithStyling)
+             showStatus('sucessfully saved', 'alert-danger')
+         });
+ 
+         $('#load').on('click', function(){
+             const savedData = localStorage.getItem('doc_' + savedEmailContent);
+             if (savedData){
+                 $('emailContent').summernote('code', savedData);
+                 showStatus('Loaded succesfully', 'alert-danger')
+             }else{
+                 showStatus('error', 'alert-danger')
+             }
+         });
+ 
+         function showStatus(msg, type){
+             $('#statusMessage').html(`<div class="alert ${type}">${msg}</div>`);
+         }*/
 
 
-/*
-        const dropdown = document.getElementById('csv_type')
-        const preset_csv = document.getElementById('presets')
-        const custom_csv = document.getElementById('customs')
 
-        dropdown.addEventListener('change', function () {
-            preset_csv.classList.add('d-none');
-            custom_csv.classList.add('d-none');
 
-            if (this.value === 'preset_csv') {
-                preset_csv.classList.remove('d-none');
-            } else if (this.value === 'custom_csv') {
-                custom_csv.classList.remove('d-none');
-            }
-        });*/
+        /*
+                const dropdown = document.getElementById('csv_type')
+                const preset_csv = document.getElementById('presets')
+                const custom_csv = document.getElementById('customs')
+        
+                dropdown.addEventListener('change', function () {
+                    preset_csv.classList.add('d-none');
+                    custom_csv.classList.add('d-none');
+        
+                    if (this.value === 'preset_csv') {
+                        preset_csv.classList.remove('d-none');
+                    } else if (this.value === 'custom_csv') {
+                        custom_csv.classList.remove('d-none');
+                    }
+                });*/
 
     </script>
 

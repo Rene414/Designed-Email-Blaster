@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, flash, redirect, url_for, session
+from functools import wraps
 import pandas as pd
 from io import StringIO
 import csv
@@ -159,7 +160,7 @@ button_template="""\
     <body>
         <p>Please click the button if this is the correct email you'd like to send.</p>
         <form method="POST" action="/confirm_email/<token>">
-            <a href = "http://127.0.0.1:5000/confirm_email/<id>/<admin_email>" class = "confirm_button"> Confirm</a>
+            <a href = "http://192.168.7.179:5000/confirm_email/<id>/<admin_email>" class = "confirm_button"> Confirm</a>
         </form>
     </body>
 </html>
@@ -274,7 +275,8 @@ def frontend():
     all_confirmed_emails= Logs.query.filter_by(status = "Waiting Confirmation").all()
     confirm1 = Logs.query.filter(Logs.confirmation_one.isnot(None)).all()
     confirm2 = Logs.query.filter(Logs.confirmation_two.isnot(None)).all()
-    return render_template('Frontend.html', email_list = all_saved_emails, confirmed_emails= all_confirmed_emails, confirm1 = confirm1, confirm2 = confirm2)
+    all_ready_to_submit_emails = Logs.query.filter_by(status = "Confirmed").all()
+    return render_template('Frontend.html', email_list = all_saved_emails, confirmed_emails= all_confirmed_emails, confirm1 = confirm1, confirm2 = confirm2, ready_to_submit = all_ready_to_submit_emails)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login_page():
@@ -290,14 +292,14 @@ def login_page():
             return render_template('login.html', error = "Invalid username or password")
     return render_template('login.html')
 
-'''def admin_required(f):
+def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if current_user.admin ==False:
-            flash('access denied')
+        if not current_user.is_authenticated or current_user.admin == False:
+            flash('Access denied')
             return redirect(url_for('frontend'))
         return f(*args, **kwargs)
-    return decorated_function'''
+    return decorated_function
 
 @app.route('/logout')
 @login_required
@@ -416,6 +418,9 @@ def create_email():
                 'subject': subject, 
                 'html':html}
         if btn_clicked == "save":
+            '''if email=="":
+                flash("Email content cannot be empty when saving.")
+                return render_template('create_email.html', data=data)'''
             email_unique_id = generate_short_id()
             #datetime.now(ZoneInfo("America/Los_Angeles")).strftime('%m/%d/%y %I:%M %p')
             new_saved_email = SavedEmails(email_unique_id = email_unique_id, creator = current_user.email_address, email_subject = subject, email_content = email, date_saved = datetime.now(ZoneInfo("America/Los_Angeles")).strftime('%m/%d/%y %I:%M %p'))
@@ -426,6 +431,9 @@ def create_email():
             db.session.commit()
             return redirect(url_for('frontend'))
         if btn_clicked == 'confirm':
+            '''if email=="":
+                flash("Email content cannot be empty when confirming.")
+                return render_template('create_email.html', data=data)'''
             print('confirm button clicked')
             email_unique_id = generate_short_id()
             print(f"Function triggered at: {datetime.now(ZoneInfo("America/Los_Angeles")).strftime('%m/%d/%y %I:%M %p')}")
@@ -661,33 +669,76 @@ def event_listener(mapper, connection, target):
 
     
 
-def add_users(username, password, admin):
-    new_user = Users(username = username, password =password, admin = admin)
+def add_users(username, email, password, admin):
+    new_user = Users(username = username, email_address = email, password =password, admin = admin)
     db.session.add(new_user)
     db.session.commit()
 
 def delete_users(id):
+    id = int(id)
     user_delete = Users.query.get(id)
+    if user_delete is None:
+        raise ValueError(f"User with id {id} not found")
     db.session.delete(user_delete)
     db.session.commit()
 
+def delete_saved_email(email_unique_id):
+    email_to_delete = Logs.query.filter_by(email_unique_id=email_unique_id).first()
+    second_email_to_delete = SavedEmails.query.filter_by(email_unique_id=email_unique_id).first()
+    if email_to_delete and second_email_to_delete:
+        db.session.delete(email_to_delete)
+        db.session.delete(second_email_to_delete)
+        db.session.commit()
+    else:
+        raise ValueError(f"Email with unique ID {email_unique_id} not found")
+ 
+
 @app.route('/admin_page', methods=['GET','POST'])  
+@admin_required
 def admin_page():
     form_category = request.form.get('user_form_type')
     if form_category == 'add_user':
         username = request.form.get('username')
+        email = request.form.get('email')
         password = request.form.get('password')
+        if not username or not email or not password:
+            flash("All fields (username, email, password) are required for adding a user")
+            users_table = Users.query.all()
+            return render_template('admin_page.html', users_table=users_table)
         admin = request.form.get('admin')
         if admin =="on":
             admin_status = True
         else:
             admin_status=False
-        add_users(username, password, admin_status)
+        try:
+            add_users(username, email, password, admin_status)
+            flash("User added successfully")
+        except Exception as e:
+            flash(f"Error adding user: {e}")
+        table_after_add = Users.query.all()
+        return render_template('admin_page.html', users_table=table_after_add)
     elif form_category == "delete_user":
         id = request.form.get('user_id')
-        delete_users(id)
+        if not id:
+            flash("Please select a user to delete")
+            users_table = Users.query.all()
+            return render_template('admin_page.html', users_table=users_table)
+        try:
+            delete_users(id)
+            flash("User deleted successfully")
+        except Exception as e:
+            flash(f"Error deleting user: {e}")
+        table_after_delete = Users.query.all()
+        return render_template('admin_page.html', users_table=table_after_delete)
+    if form_category == "saved_email_form":
+        email_unique_id = request.form.get('email_unique_id')
+        delete_saved_email(email_unique_id)
+        logs_table = Logs.query.filter_by(status = "Saved").first()
+        flash("Saved email deleted successfully")
+        return render_template('admin_page.html', logs_table=logs_table)
     users_table = Users.query.all()
-    return render_template('admin_page.html', users_table=users_table)
+    logs_table = Logs.query.all()
+    return render_template('admin_page.html', users_table=users_table, logs_table=logs_table)
 
 
 
