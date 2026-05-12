@@ -556,6 +556,12 @@ def confirmed_emails(email_unique_id):
 #form_info={'file': '', 'email': '', 'subject': '', 'html':''}
 @app.route('/submit/<email_unique_id>', methods=['GET', 'POST'])
 def submit_email(email_unique_id):
+    email_data = EmailContent.query.filter_by(email_unique_id=email_unique_id).first()
+    subject = email_data.email_subject
+    content = email_data.email_content
+    data = {
+            'emailContent': content, 
+            'subject': subject}
     if request.method == 'POST':
         csv_category = request.form.get('csv_type')
         if csv_category == "preset_csv":
@@ -571,16 +577,12 @@ def submit_email(email_unique_id):
         email=request.form['emailContent']
         subject = request.form['subject']
         html = request.form.get('HtmlButton')
-        email_data = EmailContent.query.filter_by(email_unique_id=email_unique_id).first()
-        subject = email_data.email_subject
-        content = email_data.email_content
-        data = {
-                'emailContent': content, 
-                'subject': subject}
+        
         '''data = {
                 'emailContent': email, 
                 'subject': subject, 
                 'html':html}'''
+        
         
         if btn_clicked == 'submit':
             #FIX THISSSSS
@@ -676,7 +678,7 @@ def add_users(username, email, password, admin):
 
 def delete_users(id):
     id = int(id)
-    user_delete = Users.query.get(id)
+    user_delete = session.query(Users).filter(Users.id == id).first()
     if user_delete is None:
         raise ValueError(f"User with id {id} not found")
     db.session.delete(user_delete)
@@ -730,11 +732,22 @@ def admin_page():
             flash(f"Error deleting user: {e}")
         table_after_delete = Users.query.all()
         return render_template('admin_page.html', users_table=table_after_delete)
-    if form_category == "saved_email_form":
-        email_unique_id = request.form.get('email_unique_id')
-        delete_saved_email(email_unique_id)
+    delete_form = request.form.get('delete_email')
+    if delete_form == "saved_email":
+        email_unique_id = request.form.get('delete_saved_email')
+
+        if not email_unique_id:
+            flash("Please select a saved email to delete")
+            logs_table = Logs.query.filter_by(status = "Saved").all()
+            return render_template('admin_page.html', logs_table=logs_table)
+        try:
+            delete_saved_email(email_unique_id)
+            flash("Saved email deleted successfully")
+        except Exception as e:
+            flash(f"Error deleting saved email: {e}")
+
         logs_table = Logs.query.filter_by(status = "Saved").first()
-        flash("Saved email deleted successfully")
+  
         return render_template('admin_page.html', logs_table=logs_table)
     users_table = Users.query.all()
     logs_table = Logs.query.all()

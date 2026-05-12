@@ -45,7 +45,7 @@
                             <div class="mb-2">
                                 <label for="form_type" class="form-label">Preset or Custom CSV File?</label>
                                 <select class="form-control" name="csv_type" id="csv_type">
-                                    <option selected>Options</option>
+                                    <option selected>Please Select An Option</option>
                                     <option value="preset_csv">Preset CSV</option>
                                     <option value="custom_csv">Custom CSV</option>
                                 </select>
@@ -74,8 +74,8 @@
 
                             <div class="form-group">
                                 <label for="emailContent">Email Content: </label>
-                                <textarea class="form-control" name="emailContent" required>
-                                    id="emailContent">{{data.get('emailContent', '')}}</textarea>
+                                <textarea class="form-control" name="emailContent"
+                                    id="emailContent" required>{{data.get('emailContent', '')}}</textarea>
                             </div>
                             <!--
                     <div class="form-check">
