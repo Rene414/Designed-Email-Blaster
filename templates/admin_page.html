@@ -44,7 +44,9 @@
         <h1 class="custom-margin-top3">User Management</h1>
 
         <div class='main-content'>
+            
             <div class="card">
+                <h3>Add or Delete Users</h3>
                 <table class="table table-striped">
                     <thead>
                         <tr>
@@ -106,12 +108,22 @@
                     </div>
                 </form>
             </div>
+            <div class = "card"> 
+                <h2>[In Progress]</h2>
+                <h3>Receive Email Blaster Documentation</h3>
+                <p>The Email Blaster documentation detailing which emails were sent out to which email, including dates the emails were sent.</p>
+                <a href="/download-db" download>
+                    <button class = "download-btn">Download Email Blaster Documentation</button>
+                </a>
+            </div>
 
 
             <div class="card">
-
+                <h3>Delete Pending Emails</h3>
                 <form action="{{url_for('admin_page')}}" class="custom-margin-top2" id="form2" method="POST" novalidate>
+                
                     <div class="mb-2">
+                        
                         <label for="email_to_delete" class="form-label">Which Type of Email Would You Like to
                             Delete?</label>
                         <select class="form-control" name="delete_email" id="email_to_delete" required>
@@ -130,7 +142,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for log in logs_table %}
+                                {% for log in logs_table | default([]) %}
                                 {% if log.status == "Saved"%}
                                 <tr>
                                     <th scope="row">{{log.email_subject}}</th>
@@ -191,12 +203,37 @@
                         </div>
                     </div>
                     <div id="ready_email_form" class="d-none mb-2">
-                        <label for="id">Username: </label>
-                        <select class="form-control" name="user_id" id="user_id">
-                            {% for user in users_table %}
-                            <option value="{{user.id}}">{{user.username}} (ID: {{user.id}})</option>
-                            {% endfor %}
-                        </select>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Subject</th>
+                                    <th scope="col">Email Unique ID</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs_table %}
+                                {% if log.status == "Confirmed"%}
+                                <tr>
+                                    <th scope="row">{{log.email_subject}}</th>
+                                    <td>{{log.email_unique_id}}</td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <div class="mb-3">
+                            <label for="delete_ready_email" class="form-label">Which Confirmed Email Would You Like to
+                                Delete?</label>
+                            <select class="form-control" name="delete_ready_email" id="delete_ready_email" required>
+                                <option disabled selected value="">Choose an option</option>
+                                {% for log in logs_table %}
+                                {% if log.status == "Confirmed"%}
+                                <option value="{{log.email_unique_id}}">{{log.email_subject}} (ID:
+                                    {{log.email_unique_id}})</option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
                     </div>
 
                     <div class="mb-4">

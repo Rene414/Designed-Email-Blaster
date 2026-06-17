@@ -91,8 +91,8 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100%;
-    min-height: 200px;
+    height: 30%;
+    min-height: 20px;
     background-color: #e9f2fa;
     border: 2px dashed #0069d9;
     border-radius: 8px;

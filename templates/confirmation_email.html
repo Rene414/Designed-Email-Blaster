@@ -77,13 +77,15 @@
             <div class="row justify-content-center align-items-center" style="height: 80vh;">
                 <div class="col-md-8 text-center">
                     <h1 class="display-1 mb-4 animated-heading text-3d">Email Blaster Confirmation</h1>
-                    <p class="lead mb-5">Are you sure you want to proceed? This action cannot be undone.</p>
+                    <p class="lead mb-5">Do you approve of the email blast or not?</p>
 
                 <form method="POST" action="{{ url_for('confirm_email_page', id = id, admin_email=admin_email) }}">
                 <input type="hidden" name="action_type" value="button_pressed">
     
                 <button id = "clickButton" value = "confirm" type="submit" name="submit_button">
-                Confirmation to send the Email</button>
+                Approve</button>
+                <button id = "clickButton" value = "reject" type="submit" name="submit_button">
+                Reject</button>
         </form>
         </div>
             </div>

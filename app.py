@@ -1,7 +1,7 @@
-from flask import Flask, render_template, request, flash, redirect, url_for, session
+from flask import Flask, render_template, send_file, request, flash, redirect, url_for, session
 from functools import wraps
 import pandas as pd
-from io import StringIO
+import io
 import csv
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -160,7 +160,7 @@ button_template="""\
     <body>
         <p>Please click the button if this is the correct email you'd like to send.</p>
         <form method="POST" action="/confirm_email/<token>">
-            <a href = "http://192.168.7.179:5000/confirm_email/<id>/<admin_email>" class = "confirm_button"> Confirm</a>
+            <a href = "http://192.168.7.189:5000/confirm_email/<id>/<admin_email>" class = "confirm_button"> Confirm</a>
         </form>
     </body>
 </html>
@@ -693,6 +693,24 @@ def delete_saved_email(email_unique_id):
         db.session.commit()
     else:
         raise ValueError(f"Email with unique ID {email_unique_id} not found")
+    
+def delete_email_awaiting_confirmation(email_unique_id):
+    email_to_delete = Logs.query.filter_by(email_unique_id=email_unique_id).first()
+    second_email_to_delete = EmailContent.query.filter_by(email_unique_id=email_unique_id).first()
+    if email_to_delete and second_email_to_delete:
+        db.session.delete(email_to_delete)
+        db.session.delete(second_email_to_delete)
+        db.session.commit()
+    else:
+        raise ValueError(f"Email with unique ID {email_unique_id} not found")
+    
+def delete_email_ready_for_sending(email_unique_id):
+    email_to_delete = Logs.query.filter_by(email_unique_id=email_unique_id).first()
+    if email_to_delete:
+        db.session.delete(email_to_delete)
+        db.session.commit()
+    else:
+        raise ValueError(f"Email with unique ID {email_unique_id} not found")         
  
 
 @app.route('/admin_page', methods=['GET','POST'])  
@@ -739,20 +757,71 @@ def admin_page():
         if not email_unique_id:
             flash("Please select a saved email to delete")
             logs_table = Logs.query.filter_by(status = "Saved").all()
-            return render_template('admin_page.html', logs_table=logs_table)
+            return render_template('admin_page.html', logs_table=logs_table or [])
         try:
             delete_saved_email(email_unique_id)
             flash("Saved email deleted successfully")
         except Exception as e:
             flash(f"Error deleting saved email: {e}")
 
-        logs_table = Logs.query.filter_by(status = "Saved").first()
+        logs_table = Logs.query.filter_by(status = "Saved").all()
   
-        return render_template('admin_page.html', logs_table=logs_table)
+        return render_template('admin_page.html', logs_table=logs_table or [])
+    if delete_form == "confirming_email":
+        email_unique_id = request.form.get('delete_confirming_email')
+
+        if not email_unique_id:
+            flash("Please select an email awaiting confirmation to delete")
+            logs_table = Logs.query.filter_by(status = "Waiting Confirmation").all()
+            return render_template('admin_page.html', logs_table=logs_table or [])
+        try:
+            delete_email_awaiting_confirmation(email_unique_id)
+            flash("Email awaiting confirmation deleted successfully")
+        except Exception as e:
+            flash(f"Error deleting email awaiting confirmation: {e}")
+
+        logs_table = Logs.query.filter_by(status = "Waiting Confirmation").all()
+  
+        return render_template('admin_page.html', logs_table=logs_table or [])
+    if delete_form == "ready_email":
+        email_unique_id = request.form.get('delete_ready_email')
+
+        if not email_unique_id:
+            flash("Please select a confirmed email to delete")
+            logs_table = Logs.query.filter_by(status = "Confirmed").all()
+            return render_template('admin_page.html', logs_table=logs_table or [])
+        try:
+            delete_email_awaiting_confirmation(email_unique_id)
+            flash("Confirmed Email deleted successfully")
+        except Exception as e:
+            flash(f"Error deleting email awaiting confirmation: {e}")
+
+        logs_table = Logs.query.filter_by(status = "Confirmed").all()
+  
+        return render_template('admin_page.html', logs_table=logs_table or [])
     users_table = Users.query.all()
     logs_table = Logs.query.all()
-    return render_template('admin_page.html', users_table=users_table, logs_table=logs_table)
+    return render_template('admin_page.html', users_table=users_table, logs_table=logs_table or [])
 
+
+@app.route('/download-db')
+def download_db():
+    try:
+        record = Documentation.query.all()
+        if not record:
+            flash("No documentation available to download")
+        proxy=io.StringIO()
+        writer = csv.writer(proxy)
+        writer.writerow(['Email Unique ID', 'Client Name', 'Client Email', 'Email Subject', 'Date Sent'])
+        for row in record:
+            writer.writerow([row.email_unique_id, row.client_name, row.client_email, row.email_subject, row.date_sent])
+        mem=io.BytesIO()
+        mem.write(proxy.getvalue().encode('utf-8'))
+        mem.seek(0)
+        proxy.close()
+        return send_file(mem, mimetype='text/csv', attachment_filename='Email_Blaster_Documentation.csv', as_attachment=True)
+    except Exception as e:
+        return str(e), 500
 
 
 @app.route('/pending')

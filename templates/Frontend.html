@@ -31,7 +31,14 @@
 
 <div class = "container-fluid main-container">
     <div class="row ">
-        <div class='col-md-4'>
+        <div class='col-md-3'>
+            <h2 class="column-header">Create New</h2>
+            <div class="create-email-card">
+                         
+                        <a href = "{{url_for('create_email')}}"> Create New Email</a>
+                    </div>
+                </div>
+        <div class='col-md-3'>
           
                 <h2 class="column-header">Saved Emails</h2>
                 
@@ -52,7 +59,7 @@
                 </div>
           
             </div>
-        <div class='col-md-4'>
+        <div class='col-md-3'>
             <h2 class="column-header">Emails Awaiting Confirmation</h2>
                 <div class = "email-grid">
                     {% for item in confirmed_emails %}
@@ -73,7 +80,7 @@
                 </div>
                 
         </div>
-        <div class='col-md-4'>
+        <div class='col-md-3'>
             <h2 class="column-header">Emails Ready for Sending</h2>
                 <div class = "email-grid">
                     {% for item in ready_to_submit %}
@@ -94,13 +101,26 @@
                 </div>
                 
         </div>
-        <div class='col-md-4'>
-            <h2 class="column-header">Create New</h2>
-            <div class="create-email-card">
-                         
-                        <a href = "{{url_for('create_email')}}"> Create New Email</a>
-                    </div>
+        
+            </div>
+            <div class = "row">
+                <div class = "col-md-3">
+                    <h2 class="column-header">Denied Email Blasts</h2>
+                    
                 </div>
+            </div>
+            <div class = "row">
+                <div class = "col-md-10">
+                    <h3>Email Blaster Workflow</h3>
+                    <p>The Email Blaster works in a three-step process:</p>
+                    <ul>
+                        <li><strong>1. Create your new email blast.</strong>If you wish to continue creating the email blast, you may save it using the "Save" button and continune at a later time.</li>
+                        <li><strong>2. Confirm the email blast details with two administrators.</strong> Once you finish drafting the email, click "Confirm" to send the email draft to all administrators and await at least two confirmations.</li>
+                        <li><strong>3. Submit the email to the specified clients.</strong></li>
+                    </ul>
+                </div>
+            </div> 
+
             </div>
         </div>
 
