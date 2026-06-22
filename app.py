@@ -162,7 +162,7 @@ button_template="""\
     <body>
         <p>Please click the button if this is the correct email you'd like to send.</p>
         <form method="POST" action="/confirm_email/<token>">
-            <a href = "http://192.168.7.189:5000/confirm_email/<id>/<admin_email>" class = "confirm_button"> Confirm</a>
+            <a href = "http://192.168.7.190:5000/confirm_email/<id>/<admin_email>" class = "confirm_button"> Confirm</a>
         </form>
     </body>
 </html>
