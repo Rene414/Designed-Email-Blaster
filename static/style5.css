@@ -119,3 +119,11 @@ h1.custom-margin-top3 {
 .form-check-label {
     margin-left: 0.5rem;
 }
+.download-btn {
+    background-color: #0069d9;
+    color: white;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    border-radius: 5px;
+    font-weight: 600;
+}

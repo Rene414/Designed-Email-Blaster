@@ -17,7 +17,7 @@
     
     <nav class="navbar navbar-expand-lg">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/">Email Blaster</a>
+            <a class="navbar-brand" href="/">Email Blaster - {{ current_user.username }}</a>
                 <div class="d-flex">
                     <a class="btn btn-dark me-2" href="{{url_for('admin_page')}}">Admin Page</a>
                     {% if current_user.is_authenticated %}
@@ -106,7 +106,22 @@
             <div class = "row">
                 <div class = "col-md-3">
                     <h2 class="column-header">Denied Email Blasts</h2>
-                    
+                    <div class = "email-grid">
+                    {% for item in rejected_emails %}
+                    <a href = "{{url_for('rejected_email_page', email_unique_id=item.email_unique_id)}}">
+                     <div class="card mx-auto">
+                        <div class = "card-body">
+                            <h5 class="card-title">Subject: {{item.email_subject}}</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">Rejected By: {{item.rejection}}</h6>
+                            <h6 class="card-subtitle mb-2 text-muted">Saved on: {{item.date_saved}}</h6>
+                            <p class="card-text">{{item.email_content | safe}}</p>
+                        </div>
+                    </div>
+                    </a>
+                    {% else %}
+                    <p>No emails are currently denied.</p>
+                    {% endfor %}
+                </div>
                 </div>
             </div>
             <div class = "row">

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, send_file, request, flash, redirect, url_for, session
+from flask import Flask, render_template, Response, send_file, request, flash, redirect, url_for, session
 from functools import wraps
 import pandas as pd
 import io
@@ -69,8 +69,10 @@ class Logs(db.Model):
     email_unique_id = email_subject = db.Column(db.String(15), unique=True)
     email_subject = db.Column(db.String(200))
     email_timestamp = db.Column(db.String(100))
+    email_creator = db.Column(db.String(100))
     confirmation_one = db.Column(db.String(80), nullable =True)
     confirmation_two = db.Column(db.String(80), nullable = True)
+    rejection= db.Column(db.String(80), nullable = True)
     status = db.Column(db.String(100))
     submitted = db.Column(db.Boolean, default = False)
 
@@ -272,11 +274,12 @@ def confirm_button_function (email_id, text, subject, html, admin_email):
 @login_required
 def frontend():
     all_saved_emails = SavedEmails.query.filter_by(creator = current_user.email_address).all()
-    all_confirmed_emails= Logs.query.filter_by(status = "Waiting Confirmation").all()
+    all_confirmed_emails= Logs.query.filter_by(email_creator = current_user.email_address, status = "Waiting Confirmation").all()
     confirm1 = Logs.query.filter(Logs.confirmation_one.isnot(None)).all()
     confirm2 = Logs.query.filter(Logs.confirmation_two.isnot(None)).all()
-    all_ready_to_submit_emails = Logs.query.filter_by(status = "Confirmed").all()
-    return render_template('Frontend.html', email_list = all_saved_emails, confirmed_emails= all_confirmed_emails, confirm1 = confirm1, confirm2 = confirm2, ready_to_submit = all_ready_to_submit_emails)
+    all_ready_to_submit_emails = Logs.query.filter_by(email_creator = current_user.email_address, status = "Confirmed").all()
+    rejected_emails = Logs.query.filter_by(email_creator = current_user.email_address, status = "Rejected").all()
+    return render_template('Frontend.html', email_list = all_saved_emails, confirmed_emails= all_confirmed_emails, confirm1 = confirm1, confirm2 = confirm2, ready_to_submit = all_ready_to_submit_emails, rejected_emails = rejected_emails)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login_page():
@@ -426,7 +429,7 @@ def create_email():
             new_saved_email = SavedEmails(email_unique_id = email_unique_id, creator = current_user.email_address, email_subject = subject, email_content = email, date_saved = datetime.now(ZoneInfo("America/Los_Angeles")).strftime('%m/%d/%y %I:%M %p'))
             db.session.add(new_saved_email)
             db.session.commit()
-            new_log = Logs(email_subject= subject, email_unique_id = email_unique_id, email_timestamp =datetime.now(ZoneInfo("America/Los_Angeles")).strftime('%m/%d/%y %I:%M %p'), status = "Saved")
+            new_log = Logs(email_subject= subject, email_unique_id = email_unique_id, email_timestamp =datetime.now(ZoneInfo("America/Los_Angeles")).strftime('%m/%d/%y %I:%M %p'), email_creator = current_user.email_address, status = "Saved")
             db.session.add(new_log)
             db.session.commit()
             return redirect(url_for('frontend'))
@@ -437,7 +440,7 @@ def create_email():
             print('confirm button clicked')
             email_unique_id = generate_short_id()
             print(f"Function triggered at: {datetime.now(ZoneInfo("America/Los_Angeles")).strftime('%m/%d/%y %I:%M %p')}")
-            log_email_entry = Logs(email_subject= subject, email_unique_id = email_unique_id, email_timestamp =datetime.now(ZoneInfo("America/Los_Angeles")).strftime('%m/%d/%y %I:%M %p'),status = "Waiting Confirmation")
+            log_email_entry = Logs(email_subject= subject, email_unique_id = email_unique_id, email_timestamp =datetime.now(ZoneInfo("America/Los_Angeles")).strftime('%m/%d/%y %I:%M %p'), email_creator = current_user.email_address, status = "Waiting Confirmation")
             db.session.add(log_email_entry)
             db.session.commit()
             new_email_entry = EmailContent(email_unique_id=email_unique_id, creator = current_user.email_address, email_subject = subject, email_content = email, date_saved = datetime.now(ZoneInfo("America/Los_Angeles")).strftime('%m/%d/%y %I:%M %p'))
@@ -625,14 +628,70 @@ def confirm_email_page(id, admin_email):
                     confirm_logs.confirmation_two=username
                     db.session.commit()
                 return render_template('confirmation_page.html')
+            elif is_button_clicked == "reject":
+                link_record.is_used = True
+                db.session.commit()
+                if confirm_logs.rejection is None:
+                    first_user_id = current_user.id
+                    confirm_logs.rejection=username
+                    confirm_logs.status = "Rejected"
+                    db.session.commit()
+                return render_template("rejection_page.html")
              #return render_template('confirmation_email.html', token = token)
         
         
     return render_template('confirmation_email.html', id = id, admin_email = admin_email)
     
     
-
+@app.route('/rejected_email/<email_unique_id>', methods = ['GET', 'POST'])
+@login_required
+def rejected_email_page(email_unique_id):
+    record = Logs.query.filter_by(email_unique_id=email_unique_id, email_creator = current_user.email_address).first()
+    EmailContentEntry = EmailContent.query.filter_by(email_unique_id=email_unique_id).first()
+    data={
+                'emailContent': EmailContentEntry.email_content if EmailContentEntry else '',
+                'subject': record.email_subject if record else '',
+                'date_saved': record.email_timestamp if record else ''}
     
+    btn_clicked = request.form.get('action_type')
+    
+    if btn_clicked == "save":
+        email=request.form['emailContent']
+        subject = request.form['subject']
+        html = request.form.get('HtmlButton')
+        data2 = {
+            'emailContent': email, 
+            'subject': subject, 
+            'html':html}
+         
+            #datetime.now(ZoneInfo("America/Los_Angeles")).strftime('%m/%d/%y %I:%M %p')
+        new_saved_email = SavedEmails(email_unique_id = email_unique_id, creator = current_user.email_address, email_subject = subject, email_content = email, date_saved = datetime.now(ZoneInfo("America/Los_Angeles")).strftime('%m/%d/%y %I:%M %p'))
+        db.session.add(new_saved_email)
+        EmailContentEntry.email_content = email
+        EmailContentEntry.email_subject = subject
+        EmailContentEntry.date_saved = datetime.now(ZoneInfo("America/Los_Angeles")).strftime('%m/%d/%y %I:%M %p')
+        record.status= "Saved"
+        db.session.commit()
+            
+        return redirect(url_for('frontend'))
+    if btn_clicked == 'confirm':
+        email=request.form['emailContent']
+        subjects = request.form['subject']
+        html = request.form.get('HtmlButton')
+        data2 = {
+            'emailContent': email, 
+            'subject': subjects, 
+            'html':html}
+        record.status = "Waiting Confirmation"
+        record.confirmation_one = None
+        record.confirmation_two = None
+        record.rejection = None
+        record.email_subject = subjects
+        record.email_timestamp = datetime.now(ZoneInfo("America/Los_Angeles")).strftime('%m/%d/%y %I:%M %p')
+        db.session.commit()
+        return render_template('confirmed_emails.html', email_unique_id = email_unique_id, data = data2, check_confirm = None)
+    return render_template('rejected_email.html', email_unique_id = email_unique_id, data=data)
+
 
 @app.route('/email')
 def email():
@@ -806,22 +865,22 @@ def admin_page():
 
 @app.route('/download-db')
 def download_db():
-    try:
-        record = Documentation.query.all()
-        if not record:
-            flash("No documentation available to download")
-        proxy=io.StringIO()
-        writer = csv.writer(proxy)
-        writer.writerow(['Email Unique ID', 'Client Name', 'Client Email', 'Email Subject', 'Date Sent'])
-        for row in record:
-            writer.writerow([row.email_unique_id, row.client_name, row.client_email, row.email_subject, row.date_sent])
-        mem=io.BytesIO()
-        mem.write(proxy.getvalue().encode('utf-8'))
-        mem.seek(0)
-        proxy.close()
-        return send_file(mem, mimetype='text/csv', attachment_filename='Email_Blaster_Documentation.csv', as_attachment=True)
-    except Exception as e:
-        return str(e), 500
+    
+    record = Documentation.query.all()
+    if not record:
+        flash("No documentation available to download")
+    filename = f"email_blaster_documentation_{datetime.now(ZoneInfo('America/Los_Angeles')).strftime('%Y-%m-%d')}.csv"
+    proxy=io.StringIO()
+    writer = csv.writer(proxy)
+    writer.writerow(['Email Unique ID', 'Client Name', 'Client Email', 'Email Subject', 'Date Sent'])
+    for row in record:
+        writer.writerow([row.email_unique_id, row.client_name, row.client_email, row.email_subject, row.date_sent])
+    proxy.seek(0)
+    return Response(
+    proxy.getvalue(),
+    mimetype="text/csv",
+    headers={"Content-disposition": f"attachment; filename={filename}"}
+    )
 
 
 @app.route('/pending')
