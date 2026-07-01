@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Email Blaster</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        /* Master frame configuration keeping columns structured inside a single scroll body layout */
+        
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <a id = "sidebar-name" class="sidebar-brand" href="/">Email Blaster</a>
+        <ul class="sidebar-menu">
+            <li><a class="sidebar-link active" href="#">Home Page</a></li>
+            <li><a class="sidebar-link" href="{{url_for('create_email')}}">Create Email</a></li>
+            <li><a class="sidebar-link" href="{{url_for('admin_page')}}">Admin Page</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('logout') }}" class="btn btn-sidebar-danger">Logout</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="main-content-wrapper">
+        <div class="container-fluid">
+            <div class="row g-4">
+                
+                <div class="col-xl-3 col-md-6">
+                    <h2 class="column-header">Saved Emails</h2>
+                    <div class="email-grid">
+                        {% for item in email_list %}
+                        <a class="card-link" href="{{url_for('saved_emails', email_unique_id=item.email_unique_id)}}">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title" style="font-size: 1rem; font-weight: 700; color: #2c3e50;">Subject: {{item.email_subject}}</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted" style="font-size: 0.8rem;">Saved on: {{item.date_saved}}</h6>
+                                    <div class="card-text" style="font-size: 0.85rem; max-height: 60px; overflow: hidden; text-overflow: ellipsis;">{{item.email_content | safe}}</div>
+                                </div>
+                            </div>
+                        </a>
+                        {% else %}
+                        <p class="text-muted text-center py-3" style="font-weight: 600;">No saved emails found.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <h2 class="column-header">Awaiting Confirmation</h2>
+                    <div class="email-grid">
+                        {% for item in confirmed_emails %}
+                        <a class="card-link" href="{{url_for('confirmed_emails', email_unique_id=item.email_unique_id)}}">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title" style="font-size: 1rem; font-weight: 700; color: #2c3e50;">Subject: {{item.email_subject}}</h5>
+                                    <h6 class="card-subtitle mb-1 text-muted" style="font-size: 0.8rem;">Confirm 1: {{item.confirmation_one}}</h6>
+                                    <h6 class="card-subtitle mb-1 text-muted" style="font-size: 0.8rem;">Confirm 2: {{item.confirmation_two}}</h6>
+                                    <h6 class="card-subtitle mb-2 text-muted" style="font-size: 0.75rem;">Saved on: {{item.date_saved}}</h6>
+                                    <div class="card-text" style="font-size: 0.85rem; max-height: 60px; overflow: hidden; text-overflow: ellipsis;">{{item.email_content | safe}}</div>
+                                </div>
+                            </div>
+                        </a>
+                        {% else %}
+                        <p class="text-muted text-center py-3" style="font-weight: 600;">No emails awaiting confirmation.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <h2 class="column-header">Ready for Sending</h2>
+                    <div class="email-grid">
+                        {% for item in ready_to_submit %}
+                        <a class="card-link" href="{{url_for('submit_email', email_unique_id=item.email_unique_id)}}">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title" style="font-size: 1rem; font-weight: 700; color: #2c3e50;">Subject: {{item.email_subject}}</h5>
+                                    <h6 class="card-subtitle mb-1 text-muted" style="font-size: 0.8rem;">Confirm 1: {{item.confirmation_one}}</h6>
+                                    <h6 class="card-subtitle mb-1 text-muted" style="font-size: 0.8rem;">Confirm 2: {{item.confirmation_two}}</h6>
+                                    <h6 class="card-subtitle mb-2 text-muted" style="font-size: 0.75rem;">Saved on: {{item.date_saved}}</h6>
+                                    <div class="card-text" style="font-size: 0.85rem; max-height: 60px; overflow: hidden; text-overflow: ellipsis;">{{item.email_content | safe}}</div>
+                                </div>
+                            </div>
+                        </a>
+                        {% else %}
+                        <p class="text-muted text-center py-3" style="font-weight: 600;">No emails ready for sending.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <h2 class="column-header">Create New</h2>
+                    <div class="create-email-card-wrapper">
+                        <a href="{{url_for('create_email')}}">Create New Email Campaign +</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#emailContent').summernote({
+                height: 300
+            });
+        });
+
+        var socket = io()
+       /* socket.on('button_enabled', function (data) {
+            if (data.status === 'True') {
+                document.getElementById('submit').disabled = false;
+            }
+        });*/
+        /*
+        socket.on('confirmation_channel', function (data) {
+            document.getElementById('confirmation_counter').innerText = data.amount;
+        });*/
+/*
+        const dropdown = document.getElementById('csv_type')
+        const preset_csv = document.getElementById('presets')
+        const custom_csv = document.getElementById('customs')
+
+        dropdown.addEventListener('change', function () {
+            preset_csv.classList.add('d-none');
+            custom_csv.classList.add('d-none');
+
+            if (this.value === 'preset_csv') {
+                preset_csv.classList.remove('d-none');
+            } else if (this.value === 'custom_csv') {
+                custom_csv.classList.remove('d-none');
+            }
+        });*/
+    </script>
+</body>
+</html>
