@@ -13,7 +13,8 @@ body {
     width: 100%;
     background-color: #ffffff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6; 
+    padding: 0.5rem 1rem; 
 }
 
 .navbar-brand {
@@ -23,7 +24,7 @@ body {
 
 .container, .container-fluid, .container-xxl {
     width: 100%;
-    max-width: 1200px; /* Max width for large screens */
+    max-width: 1500px; /* Max width for large screens */
     padding: 20px;
 }
 
@@ -126,4 +127,30 @@ h1.custom-margin-top3 {
     padding: 0.5rem 1.5rem;
     border-radius: 5px;
     font-weight: 600;
+}
+
+.user-management {
+    display: flex;
+    flex-direction: column;
+    width: 500px;
+}
+
+ .site-footer {
+  position: relative;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background-color: rgb(207, 210, 219);
+  color: rgb(0, 0, 0);
+  text-align: center;
+}
+
+.footer-content {
+  margin: 0 auto;
+  padding: 0 22px;
+  display: flex;
+  justify-content: space-between; /* Puts copyright on left, links on right */
+  align-items: center;
+  flex-wrap: wrap; /* Wraps items nicely on small mobile screens */
+  gap: 14px;
 }

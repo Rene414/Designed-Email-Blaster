@@ -1,7 +1,8 @@
-from flask import Flask, render_template, Response, send_file, request, flash, redirect, url_for, session
+from flask import Flask, jsonify, render_template, Response, send_file, request, flash, redirect, url_for, session
 from functools import wraps
 import pandas as pd
 import io
+from io import StringIO
 import csv
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -10,13 +11,16 @@ from zoneinfo import ZoneInfo
 import os
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
-from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 import smtplib
 from datetime import datetime, timezone, timedelta
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user, login_required, UserMixin, login_user, logout_user
 from flask_socketio import SocketIO
+import bcrypt
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+import time
 
 import secrets
 import string
@@ -51,18 +55,15 @@ login_manager=LoginManager()
 login_manager.init_app(app)
 
 login_manager.login_view = 'login_page'
-login_manager.login_message = "Please log in to access this page."
 
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    return redirect(url_for("login_page"))
 
 
 db = SQLAlchemy(app)
 
-'''class Counter(db.Model):
-    __bind_key__='count'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), unique=True, nullable=False)
-    count = db.Column(db.Integer, default=0)
-'''
 class Logs(db.Model):
     __bind_key__='count'
     id = db.Column(db.Integer, primary_key=True)
@@ -78,8 +79,8 @@ class Logs(db.Model):
 
 class Users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), nullable = False)
-    email_address = db.Column(db.String(100), unique = True)
+    username = db.Column(db.String(100), unique=True, nullable = False)
+    email_address = db.Column(db.String(100), unique = True, nullable = False)
     password = db.Column(db.String(100), nullable = False)
     admin = db.Column(db.Boolean, default = False)
 
@@ -132,15 +133,15 @@ def initialize_database():
             initial_counter = Counter(name='button_clicks', count=0)
             db.session.add(initial_counter)
             db.session.commit()'''
-        if not Users.query.filter_by(username='Rena').first():
-            rena_user = Users(username='Rena', email_address = "renatestt@gmail.com", password = 'password', admin = True)
-            rena2_user = Users(username='RenaTwo', email_address = "rena@cbt.io", password = 'password', admin = True)
+        if not Users.query.filter_by(username='rena').first():
+            byte_password = bcrypt.hashpw('password'.encode('utf-8'), bcrypt.gensalt())
+            rena_user = Users(username='rena', email_address = "renatestt@gmail.com", password = byte_password, admin = True)
+            rena2_user = Users(username='renatwo', email_address = "rena@cbt.io", password = byte_password, admin = True)
             db.session.add(rena_user)
             db.session.add(rena2_user)
             db.session.commit()
 
-'''def create_link():
-    link = url_for('confirm_email_page', token = "", _external=True)'''
+
 
 html_template="""\
 <html>
@@ -160,9 +161,10 @@ html_template="""\
 button_template="""\
 <html>
     <body>
+        <p>-----------------------------------------------------------------------------------</p>
         <p>Please click the button if this is the correct email you'd like to send.</p>
         <form method="POST" action="/confirm_email/<token>">
-            <a href = "http://192.168.7.190:5000/confirm_email/<id>/<admin_email>" class = "confirm_button"> Confirm</a>
+            <a href = "http://192.168.7.65:5000/confirm_email/<id>/<admin_email>" class = "confirm_button"> Confirm</a>
         </form>
     </body>
 </html>
@@ -260,14 +262,77 @@ def confirm_button_function (email_id, text, subject, html, admin_email):
                 msg_image.add_header('Content-Disposition', 'inline', filename=f"{content_id}.{ext}")
                 msg_root.attach(msg_image)
         msg_alternative.attach(MIMEText(final_html, 'html'))
-    '''token_of_admin = SingleUseLink.query.filter_by(email_subject = subject, user_email=admin_email).first()
-    token = token_of_admin.token'''
+    
     new_button_template =  button_template.replace("<id>", email_id)
     final_button_template =  new_button_template.replace("<admin_email>", admin_email)
     msg_mixed.attach(MIMEText(final_button_template, "html"))
     return msg_mixed
 
+limiter = Limiter(app=app, key_func=get_remote_address, default_limits=["200 per day", "50 per hour"], storage_uri="memory://")
 
+'''def login_breach_response(limit_obj):
+    return render_template('login.html', error='Too many login attempts. Please try again shortly.')
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    if request.endpoint == 'login_page':
+        return render_template('login.html', error='Too many login attempts. Please try again shortly.')
+    return jsonify({"error": "Too many requests", "message": str(e.description)})
+'''
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    if request.endpoint == 'login_page':
+        return render_template('login.html', error='Too many login attempts. Please try again shortly.')
+    return jsonify({"error": "Too many requests", "message": str(e.description)})
+
+max_login_attempts = 3
+lockout_duration = 60 * 5 # in seconds
+login_attempts = {}
+
+def get_status(username):
+    return login_attempts.get(username, {"attempts": 0, "lockout_time": 0})
+
+
+@app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("10 per minute", key_func=get_remote_address)
+def login_page():
+    if request.method =="POST":
+        username = request.form['username'].lower()
+        user = Users.query.filter_by(username=username).first()
+        password =request.form['password']
+        password_bytes = password.encode('utf-8')
+        
+        status = get_status(username)
+        now = time.time()
+
+        if status["lockout_time"] and now >= status["lockout_time"]:
+            login_attempts[username] = {"attempts": 0, "lockout_time": 0}
+            status = get_status(username)
+
+        if status["lockout_time"] and now < status["lockout_time"]:
+            remaining = int(status["lockout_time"] - now)
+            return render_template('login.html', error=f"Too many login attempts. Please try again after {remaining} seconds.", remaining=remaining, attempts = 0)
+
+        if user and bcrypt.checkpw(password_bytes, user.password):
+            login_user(user, fresh=True)
+            login_attempts.pop(username, None)
+            print('Logged in')
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('frontend'))
+        
+        if not user or not bcrypt.checkpw(password_bytes, user.password):
+            attempts = status["attempts"] + 1
+         
+
+        if attempts >= max_login_attempts:
+            login_attempts[username] = {"attempts": attempts, "lockout_time": now + lockout_duration}
+            return render_template('login.html', error=f"Too many login attempts. Please try again after {lockout_duration} seconds.", remaining=lockout_duration, attempts = 0)
+        else:
+            login_attempts[username] = {"attempts": attempts, "lockout_time": 0}
+            return render_template('login.html', error=f"Invalid username or password. You have {max_login_attempts - attempts} attempts left.", remaining=0, attempts = max_login_attempts - attempts)
+
+    return render_template('login.html', remaining=0, attempts = 3)
 
 
 @app.route('/')
@@ -279,21 +344,8 @@ def frontend():
     confirm2 = Logs.query.filter(Logs.confirmation_two.isnot(None)).all()
     all_ready_to_submit_emails = Logs.query.filter_by(email_creator = current_user.email_address, status = "Confirmed").all()
     rejected_emails = Logs.query.filter_by(email_creator = current_user.email_address, status = "Rejected").all()
-    return render_template('Frontend.html', email_list = all_saved_emails, confirmed_emails= all_confirmed_emails, confirm1 = confirm1, confirm2 = confirm2, ready_to_submit = all_ready_to_submit_emails, rejected_emails = rejected_emails)
+    return render_template('Frontend.html', email_list = all_saved_emails, confirmed_emails= all_confirmed_emails, confirm1 = confirm1, confirm2 = confirm2, ready_to_submit = all_ready_to_submit_emails, rejected_emails = rejected_emails, user = current_user.username)
 
-@app.route('/login', methods=['GET', 'POST'])
-def login_page():
-    if request.method =="POST":
-        user = Users.query.filter_by(username = request.form['username']).first()
-        password =request.form['password']
-        if user and password==user.password:
-            login_user(user, fresh=True)
-            print('Logged in')
-            next_page = request.args.get('next')
-            return redirect(next_page or url_for('frontend'))
-        else:
-            return render_template('login.html', error = "Invalid username or password")
-    return render_template('login.html')
 
 def admin_required(f):
     @wraps(f)
@@ -308,21 +360,8 @@ def admin_required(f):
 @login_required
 def logout():
     logout_user()
-    flash("You're being logged out")
     return redirect(url_for('login_page'))
 
-
-'''def get_date():
-    pst = pytz.timezone("US/Pacific")
-    now_pst=datetime.now(pst)
-    today = now_pst.date()
-    return today'''
-
-'''def create_csv(row, date):
-    csv_name = f"{date} Emails_Outputted.csv"
-    with open(csv_name, mode = 'a', newline = '') as file:
-        writer = csv.writer(file)
-        writer.writerow(row)'''
 
 def send_email(CSV_File, email_content, email_id, email_subject, html):
     smtp = smtplib.SMTP('send.smtp.com', 587)
@@ -333,7 +372,6 @@ def send_email(CSV_File, email_content, email_id, email_subject, html):
         df=pd.read_csv(StringIO(content))
         csv_row_count = len(df)
         csv_row =0
-        #create_csv(['Organization', "Name","Email"], get_date())
         while csv_row<csv_row_count:
             email_name = df.loc[csv_row, "Name"]
             email=df.loc[csv_row, "Email"]
@@ -352,17 +390,9 @@ def send_email(CSV_File, email_content, email_id, email_subject, html):
         return render_template('Submitted.html')
     else:
         return render_template('Frontend.html', data = {}) #Replace with way to show that files haven't been inputted
-
 #Note, in order for the different names to occur, you must put [client] exactly
 
-'''def assign_token_links(email_subject):
-    users_database = Users.query.all()
-    for users in users_database:
-        if users.admin == True:
-            random_token = str(uuid.uuid4())
-            random_link = SingleUseLink(token=random_token, user_email=users.email_address, email_subject = email_subject)
-            db.session.add(random_link)
-            db.session.commit()'''
+
 
 
 
@@ -371,18 +401,14 @@ def confirm_email(email_id, email_content, email_subject, html):
     smtp = smtplib.SMTP('send.smtp.com', 587)
     smtp.ehlo()
     smtp.starttls()
-    
-    '''global start_time 
-    start_time = find_time()'''
-    '''counter_obj = Counter.query.filter_by(name="button_clicks").first()
-    counter_obj.count = 0'''
-    #db.session.commit()
+
     admin_users = Users.query.filter_by(admin=True).all()
     
     for admin in admin_users:
-        msg = confirm_button_function(email_id, email_content, email_subject, html, admin.email_address)
-        smtp.sendmail(from_addr= "noreply@cbt.io", to_addrs= admin.email_address, msg = msg.as_string())
-    #smtp.sendmail(from_addr= "noreply@cbt.io", to_addrs= 'rena@cbt.io', msg = msg.as_string())
+        if admin != current_user:
+            msg = confirm_button_function(email_id, email_content, email_subject, html, admin.email_address)
+            smtp.sendmail(from_addr= "noreply@cbt.io", to_addrs= admin.email_address, msg = msg.as_string())
+    
     smtp.quit()
 
 def generate_short_id():
@@ -402,15 +428,6 @@ def assign_admin_to_email(email_id, email_subject):
 @app.route('/create_email', methods=['GET','POST'])
 def create_email():
     if request.method == 'POST':
-        '''csv_category = request.form.get('csv_type')
-        if csv_category == "preset_csv":
-            preset_chosen = request.form.get('preset_csv_options')
-            if preset_chosen =="Rena Emails":
-                with open('Rena Email CSV.csv', 'rb') as f:
-                    file = f.read()
-        elif csv_category == "custom_csv":
-            files = request.files.get('file')
-            file = files.read()'''
         btn_clicked = request.form.get('action_type')
         #file =request.files.get('file')
         email=request.form['emailContent']
@@ -422,7 +439,7 @@ def create_email():
                 'html':html}
         if btn_clicked == "save":
             '''if email=="":
-                flash("Email content cannot be empty when saving.")
+          
                 return render_template('create_email.html', data=data)'''
             email_unique_id = generate_short_id()
             #datetime.now(ZoneInfo("America/Los_Angeles")).strftime('%m/%d/%y %I:%M %p')
@@ -731,13 +748,13 @@ def event_listener(mapper, connection, target):
     
 
 def add_users(username, email, password, admin):
-    new_user = Users(username = username, email_address = email, password =password, admin = admin)
+    new_user = Users(username = username.lower(), email_address = email, password =password, admin = admin)
     db.session.add(new_user)
     db.session.commit()
 
 def delete_users(id):
     id = int(id)
-    user_delete = session.query(Users).filter(Users.id == id).first()
+    user_delete = Users.query.filter_by(id=id).first()
     if user_delete is None:
         raise ValueError(f"User with id {id} not found")
     db.session.delete(user_delete)
@@ -780,6 +797,7 @@ def admin_page():
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
         if not username or not email or not password:
             flash("All fields (username, email, password) are required for adding a user")
             users_table = Users.query.all()
@@ -790,23 +808,23 @@ def admin_page():
         else:
             admin_status=False
         try:
-            add_users(username, email, password, admin_status)
-            flash("User added successfully")
+            add_users(username, email, hashed_password, admin_status)
+            flash("User Added Successfully")
         except Exception as e:
-            flash(f"Error adding user: {e}")
+            flash(f"Error Adding User: {e}")
         table_after_add = Users.query.all()
         return render_template('admin_page.html', users_table=table_after_add)
     elif form_category == "delete_user":
         id = request.form.get('user_id')
         if not id:
-            flash("Please select a user to delete")
+            flash("Please Select A User To Delete")
             users_table = Users.query.all()
             return render_template('admin_page.html', users_table=users_table)
         try:
             delete_users(id)
-            flash("User deleted successfully")
+            flash("User Deleted Successfully")
         except Exception as e:
-            flash(f"Error deleting user: {e}")
+            flash(f"Error Deleting User: {e}")
         table_after_delete = Users.query.all()
         return render_template('admin_page.html', users_table=table_after_delete)
     delete_form = request.form.get('delete_email')
@@ -814,14 +832,14 @@ def admin_page():
         email_unique_id = request.form.get('delete_saved_email')
 
         if not email_unique_id:
-            flash("Please select a saved email to delete")
+            flash("Please Select A Saved Email To Delete")
             logs_table = Logs.query.filter_by(status = "Saved").all()
             return render_template('admin_page.html', logs_table=logs_table or [])
         try:
             delete_saved_email(email_unique_id)
-            flash("Saved email deleted successfully")
+            flash("Saved Email Deleted Successfully")
         except Exception as e:
-            flash(f"Error deleting saved email: {e}")
+            flash(f"Error Deleting Saved Email: {e}")
 
         logs_table = Logs.query.filter_by(status = "Saved").all()
   
@@ -830,14 +848,14 @@ def admin_page():
         email_unique_id = request.form.get('delete_confirming_email')
 
         if not email_unique_id:
-            flash("Please select an email awaiting confirmation to delete")
+            flash("Please Select An Email Awaiting Confirmation To Delete")
             logs_table = Logs.query.filter_by(status = "Waiting Confirmation").all()
             return render_template('admin_page.html', logs_table=logs_table or [])
         try:
             delete_email_awaiting_confirmation(email_unique_id)
-            flash("Email awaiting confirmation deleted successfully")
+            flash("Email Awaiting Confirmation Deleted Successfully")
         except Exception as e:
-            flash(f"Error deleting email awaiting confirmation: {e}")
+            flash(f"Error Deleting Email Awaiting Confirmation: {e}")
 
         logs_table = Logs.query.filter_by(status = "Waiting Confirmation").all()
   
@@ -846,14 +864,14 @@ def admin_page():
         email_unique_id = request.form.get('delete_ready_email')
 
         if not email_unique_id:
-            flash("Please select a confirmed email to delete")
+            flash("Please Select A Confirmed Email to Delete")
             logs_table = Logs.query.filter_by(status = "Confirmed").all()
             return render_template('admin_page.html', logs_table=logs_table or [])
         try:
             delete_email_awaiting_confirmation(email_unique_id)
-            flash("Confirmed Email deleted successfully")
+            flash("Confirmed Email Deleted Successfully")
         except Exception as e:
-            flash(f"Error deleting email awaiting confirmation: {e}")
+            flash(f"Error Deleting Confirmed Email: {e}")
 
         logs_table = Logs.query.filter_by(status = "Confirmed").all()
   
@@ -888,12 +906,9 @@ def pending():
     
     return render_template(f'partials/{pending}.html')
 
-'''@app.route('/csv')
-def download_csv():
-    return send_file('Emails_Outputted.csv', as_attachment=True)'''
 
 
 if __name__ == '__main__':
     initialize_database()
     #socketio.run(app, debug=True)
-    app.run(host='0.0.0.0',port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)

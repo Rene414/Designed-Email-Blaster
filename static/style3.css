@@ -9,7 +9,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #0056b3 0%, #007bff 100%);
+    background-image: url("images/blue_background3.jpg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
 }
 
 .login-card {
@@ -55,4 +58,24 @@ body {
 .btn-primary:hover {
     background-color: #0056b3;
     border-color: #004085;
+}
+
+.site-footer {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background-color: rgb(92, 97, 109);
+  color: white;
+  text-align: center;
+}
+
+.footer-content {
+  margin: 0 auto;
+  padding: 0 22px;
+  display: flex;
+  justify-content: space-between; /* Puts copyright on left, links on right */
+  align-items: center;
+  flex-wrap: wrap; /* Wraps items nicely on small mobile screens */
+  gap: 14px;
 }

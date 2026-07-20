@@ -13,30 +13,164 @@
 
 <body>
 
-    
+
     <div class="login-card">
         <h1 class="login-title">Email Blaster Login</h1>
-          
-                <form method="POST">
-                    <div class = "mb-3">
-                    <input type = "text" name = "username" placeholder = "Username">
-                    </div>
-                    <div class = "mb-3">
-                    <input type = "password" name = "password" placeholder = "Password">
-                    </div>
-                    <div class = "mb-3">
-                    <button type="submit" value="Login">Login</button>
-                        </div>
-                        {% if error %}
-                    <div class="alert alert-danger" role="alert">{{ error }}</div>
-            {% endif %}
-                </form>
+
+        <form id="login-form" method="POST">
+            <div class="mb-3">
+                <input class="form-control" type="text" name="username" placeholder="Username">
             </div>
-        
+            <div class="mb-3">
+                <input class="form-control" type="password" name="password" placeholder="Password">
+            </div>
+            <div class="mb-3">
+                <button type="submit" id="loginButton" value="Login" class="btn btn-secondary">Login</button>
+                <div id="message" class="message"></div>
+            </div>
+            
+           
+
+            {% if error %}
+            <p id = "error" class="error alert alert-danger" role="alert">{{ error }}</p>
+            {% endif %}
+
+             {% if remaining > 0 %}
+            <div id="countdown" class="alert alert-danger countdown " role="alert">Countdown: {{ remaining }} seconds.</div>
+            <script>
+                let seconds = Number("{{remaining}}") || 0;
+                const countdownElement = document.getElementById('countdown');
+                const loginButton = document.getElementById("loginButton");
+                const errorButton = document.getElementById("error");
+
+                console.log(`Seconds left: ${seconds}`);
+                const timer = setInterval(() => {
+                    if (seconds > 0) {
+                        if (loginButton) {
+                            loginButton.disabled = true;
+                        }
+                        if (countdownElement) {
+                            countdownElement.textContent = `Countdown: ${seconds} seconds.`;
+                        }
+                        seconds--;
+                    } else {
+                        clearInterval(timer);
+                        if (countdownElement) {
+                            countdownElement.remove();
+                            errorButton.remove();
+                        }
+                        if (loginButton) {
+                            loginButton.disabled = false;
+                        }
+                    }
+                }, 1000);
+            </script>
+
+            
+            {% endif %}
+
+        </form>
+    </div>
+
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>
 
+    <footer class="site-footer">
+        <div class="footer-content">
+            <p>&copy; 2026 California Business Technology. All rights reserved.</p>
+            <p>Created by Rena</p>
+        </div>
+    </footer>
+
 </body>
+<script>
+
+
+
+    /*
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const errorDiv = document.getElementById('error');
+
+      const res = await fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+    
+      errorDiv.textContent = data.error || '';
+
+    });
+    */
+
+    /*
+         const form = document.getElementById('login-form');
+         const messageDiv = document.getElementById('message');
+    
+      
+        form.addEventListener('submit', async(event) => {
+            event.preventDefault(); // Prevent the default form submission
+    
+           
+    
+            messageDiv.className = "login message";
+            messageDiv.innerText = "Logging in...";
+            // Get the username and password values
+            const username = document.querySelector('input[name="username"]').value;
+            const password = document.querySelector('input[name="password"]').value;
+    
+            // Create a FormData object to send the data
+            try{
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ username, password }),
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    messageDiv.className = "login success";
+                    messageDiv.innerText = result.message;
+                    if (result.redirect) {
+                        window.location.href = result.redirect;
+                    }
+                } else if (response.status === 429) {
+                    messageDiv.className = "login error";
+                    messageDiv.innerText = result.error;
+                    startCooldown(60);
+                } else {
+                    messageDiv.className = "login error";
+                    messageDiv.innerText = result.error || 'Login failed';
+                }
+            } catch (error) {
+                messageDiv.className = "login error";
+                messageDiv.innerText = "An error occurred while logging in.";
+            }
+        });
+    
+        function startCooldown(seconds) {
+            const button = document.querySelector('button[type="submit"]');
+            button.disabled = true;
+            let remainingTime = seconds;
+    
+            const interval = setInterval(() => {
+                button.innerText = `Login (Wait ${remainingTime}s)`;
+                remainingTime--;
+    
+                if (remainingTime < 0) {
+                    clearInterval(interval);
+                    button.disabled = false;
+                    button.innerText = 'Login';
+                }
+            }, 1000);
+        }
+    */
+
+
+</script>
 
 </html>
