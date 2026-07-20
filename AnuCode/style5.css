@@ -1,0 +1,69 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f8fafc;
+    color: #1e293b;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.navbar {
+    width: 100%;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: #004085 !important;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    padding: 20px;
+}
+
+h1.custom-margin-top3 {
+    color: #004085;
+    text-align: center;
+    margin-top: 2rem;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+
+.main-content {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    gap: 2rem;
+}
+
+.card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+    padding: 2rem;
+    width: 100%;
+}
+
+.table {
+    margin-top: 1rem;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.table thead {
+    background-color: #004085;
+    color: #ffffff;
+}
+
+.table th, .table td {
+    vertical-align: middle;
+    padding: 1rem;
+}

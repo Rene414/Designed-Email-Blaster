@@ -1,0 +1,136 @@
+body {
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #f0f4f8;
+    color: #333333;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    display: flex;
+    overflow: scroll;
+   
+}
+
+.navbar {
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid #dee2e6;
+    padding: 0.75rem 1.5rem;
+}
+
+#sidebar-name {
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: #004085 !important;
+}
+
+.main-content {
+    padding: 3rem 1rem;
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: 0 8px 24px rgba(0, 40, 135, 0.06);
+    border: 1px solid #dee2e6;
+}
+
+h1 {
+    color: #004085;
+    font-weight: 700;
+    text-align: center;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    padding: 0.6rem 1rem;
+}
+
+
+.sidebar {
+    width: 260px;
+    background-color: #4fc3f7;
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 1.5rem;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.sidebar-brand {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: white;
+    text-decoration: none;
+    margin-bottom: 2.5rem;
+    letter-spacing: -0.5px;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.sidebar-link {
+    display: block;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
+    text-decoration: none;
+    padding: 0.8rem 1.2rem;
+    border-radius: 12px;
+    transition: all 0.2s;
+}
+
+.sidebar-link:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+.sidebar-link.active {
+    background-color: white;
+    color: #1ea3dc;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-footer {
+    margin-top: auto;
+}
+
+.main-content-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    background-color: #f3f9fc;
+}
+
+.btn-sidebar-danger {
+    display: block;
+    text-align: center;
+    background-color: rgba(255, 79, 79, 0.2);
+    color: #ffbcbc;
+    border: 2px solid transparent;
+    font-weight: 700;
+    padding: 0.8rem;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.btn-sidebar-danger:hover {
+    background-color: #ff4f4f;
+    color: white;
+}
